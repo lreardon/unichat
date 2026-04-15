@@ -1,0 +1,2 @@
+[console_scripts]
+unicrawl = unicrawl.cli:main

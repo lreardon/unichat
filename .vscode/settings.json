@@ -1,0 +1,7 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.direnv/python-3.14/bin/python",
+  "python-envs.pythonProjects": [],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/.direnv/python-3.14/lib/python3.14/site-packages"
+  ]
+}
