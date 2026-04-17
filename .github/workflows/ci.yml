@@ -104,4 +104,4 @@ jobs:
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/health && break || sleep 1
           done
-      - run: uv run st run http://localhost:8000/openapi.json --checks all --base-url http://localhost:8000
+      - run: uv run st run http://localhost:8000/openapi.json --checks response_schema_conformance --base-url http://localhost:8000

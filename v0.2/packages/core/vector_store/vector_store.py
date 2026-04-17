@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 @dataclass(frozen=True)
@@ -10,7 +10,7 @@ class ChunkResult:
     content: str
     score: float
     heading_trail: list[str] | None = None
-    metadata: dict | None = field(default=None)
+    metadata: dict[str, Any] | None = field(default=None)
 
 
 @runtime_checkable
@@ -25,7 +25,7 @@ class VectorStore(Protocol):
         embedding: list[float],
         position: int,
         heading_trail: list[str] | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None: ...
 
     async def search(

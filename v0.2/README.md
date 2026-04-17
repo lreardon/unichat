@@ -15,7 +15,6 @@ packages/
   eval/            Golden set, metrics, eval runner
 apps/
   flutter_widget/  Flutter web-embed widget (iframe + postMessage)
-infra/             Terraform for GCP (Cloud SQL, Cloud Run, CDN)
 migrations/        Alembic (Postgres 18 + pgvector)
 adrs/              Architecture decision records
 scripts/           Dev/ops scripts

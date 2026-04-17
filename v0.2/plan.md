@@ -23,7 +23,7 @@
 | Item | Decision |
 |---|---|
 | Embedding model | Best freely available open-weight retrieval model at Phase 1 kickoff. As of April 2026, candidates are `Qwen3-Embedding` family (Apache 2.0) and `BGE-M3`. 1-day bake-off on Phase 1 Day 1 commits the winner. Dimension is locked after decision. |
-| Embedding hosting | Co-located on the server for v1. Dev = engineer's machine via docker-compose. Prod = sidecar container on the same Cloud Run service as the API. Clean service boundary so it can be split out later. |
+| Embedding hosting | Co-located via docker-compose. Dev and prod both run locally. Clean service boundary so it can be split out later. |
 | Crawler | Crawlee (Python) |
 | Observability | Langfuse Cloud (hobby tier) for v1. Self-host decision triggered when we hit tier limits or need data residency. |
 | Backend | Python 3.13, FastAPI |
@@ -33,14 +33,14 @@
 | Conversation retention | 14 days. Nightly purge job. |
 | Frontends | TUI (Textual) for internal use + Flutter web-embed widget (iframe) for end-users. Both consume the same HTTP/SSE API. |
 | Database | Postgres 18 with pgvector ≥0.8, pg_trgm, pgcrypto, uuid-ossp. VectorStore abstraction for future migration. |
-| Dependency versions | Latest stable compatible versions at Phase 0. Renovate bot keeps them current. |
+| Dependency versions | Latest stable compatible versions at Phase 0. Manual updates via `uv lock --upgrade`. |
 
 ---
 
 ## Target architecture (end state)
 
 ```
-Crawl (Cloud Run Jobs, scheduled)
+Crawl (scheduled via cron in docker-compose)
   → Extract (trafilatura + unstructured)
   → Chunk (structural) + entity extraction (LLM)
   → Embed (local Embedder interface, co-located)
@@ -105,7 +105,7 @@ Implementations:
 - `RemoteEmbedder` — HTTP client against a standalone TEI service. Drop-in replacement when we split it out.
 - `FakeEmbedder` — deterministic hash-based vectors for tests.
 
-**Deployment for v1 prod:** embedder runs as a sidecar container in the same Cloud Run service as the API, communicating over localhost. This keeps "co-located" literal while preserving the boundary. If Cloud Run's CPU-per-service limits bite, we either size up the service or flip to `RemoteEmbedder` with zero code changes.
+**Deployment for v1 prod:** embedder runs as a sidecar container in docker-compose alongside the API, communicating over localhost. The `RemoteEmbedder` interface exists as an escape hatch if we later split to a dedicated host.
 
 ### Testing strategy (applies to every phase)
 
@@ -153,24 +153,21 @@ We store `sha256(cookie_value)` not the raw token — compromised DB doesn't lea
 │   └── eval/              # Golden set, metrics, eval runner
 ├── apps/
 │   └── flutter_widget/    # Flutter web-embed widget (generated API client included)
-├── infra/                 # Terraform
 ├── migrations/            # Alembic
 ├── adrs/                  # Architecture Decision Records
 ├── docker-compose.yml     # Local dev stack
 └── scripts/
 ```
 
-### 0.2 GCP infrastructure (Terraform)
+### 0.2 Docker infrastructure
 
-- Cloud SQL Postgres 18 (start `db-custom-2-8192`, tune later). Confirm PG18 GA in region; fall back to PG17 with upgrade path if preview only.
-- Cloud Run services: `api` (with embedder sidecar), `reranker-proxy` (optional)
-- Cloud Run Jobs: `ingest-{university}`, `recrawl`, `purge-expired`
-- Cloud Scheduler for recrawl and purge triggers
-- Artifact Registry (container images)
-- Secret Manager (API keys, DB credentials)
-- GCS buckets: `{project}-raw-html`, `{project}-pdfs`
-- Cloud CDN in front of widget origin
-- DNS: `api.ourproduct.com`, `widget.ourproduct.com` — shared `*.ourproduct.com` cookie scope
+All services run via `docker-compose.yml`. Dockerized architecture allows quick deployment to any host.
+
+- Postgres 18 + pgvector (container)
+- Embedder TEI sidecar (container)
+- API runs on host with hot reload (dev) or in container (prod)
+- Raw HTML stored on local filesystem (`data/raw/{university_id}/`)
+- Scheduled jobs (recrawl, purge) run as `docker compose run` commands triggered by host cron
 
 ### 0.3 Database schema (Alembic migration 0001)
 
@@ -198,7 +195,7 @@ CREATE TABLE documents (
     title TEXT,
     content_hash TEXT NOT NULL,
     page_type TEXT NOT NULL,
-    raw_html_gcs_path TEXT,
+    raw_html_path TEXT,
     last_crawled TIMESTAMPTZ NOT NULL,
     last_modified TIMESTAMPTZ,
     status TEXT NOT NULL,  -- 'active', 'stale', 'error'
@@ -287,7 +284,7 @@ CREATE TABLE feedback (
 Index strategy notes:
 - Use HNSW not IVFFlat in pgvector — better recall at our scale and no training step.
 - Every tenant-scoped table has `university_id NOT NULL` with it as leading column in composite indexes. Enforce via lint check.
-- pgvector ≥0.8 required for iterative index scans with metadata filters. If Cloud SQL lags, self-host PG on a Cloud Run VM or use AlloyDB.
+- pgvector ≥0.8 required for iterative index scans with metadata filters.
 
 ### 0.4 CI (GitHub Actions)
 
@@ -295,7 +292,6 @@ Index strategy notes:
 - `test-unit`: pytest, all packages, coverage report to Codecov
 - `test-integration`: testcontainers Postgres, runs on PR
 - `test-contract`: Schemathesis against FastAPI OpenAPI spec
-- `terraform-plan`: required check on `infra/` changes
 - `build-flutter`: `flutter analyze` + `flutter test` on Flutter package changes
 - All required; merge blocked on any failure
 
@@ -331,31 +327,23 @@ make migrate      # applies alembic migrations
 Hardware guidance for engineers:
 - Apple Silicon M2+ with ≥16GB RAM runs `Qwen3-Embedding-0.6B` comfortably on CPU
 - Larger variants need GPU or substantial RAM; document as "dev uses 0.6B, prod uses {winner}" if bake-off picks differently
-- If dev machine can't run prod model, use `RemoteEmbedder` against a shared dev embedding service on GCP
+- If dev machine can't run prod model, use `RemoteEmbedder` against a shared embedding service
 
-### 0.6 Observability & dependency management
+### 0.6 Observability
 
-- Langfuse Cloud (hobby tier) workspace created, API keys in Secret Manager
-- OpenTelemetry traces to Cloud Trace, structured logging to Cloud Logging
-- Renovate bot configured:
-  - Weekly PRs for patch/minor updates, auto-merge if CI green
-  - Separate PRs for major versions, manual review required
-  - Security advisories trigger immediate PRs
-- CI runs against pinned versions; weekly scheduled job runs against latest to catch upcoming breakage
+- Langfuse Cloud (hobby tier) for tracing
+- Structured logging to stdout (Docker logs)
 
 ### Exit criteria
-- `terraform apply` stands up the full stack from scratch in a dev GCP project
 - Migration creates all tables with indexes as specified
 - CI blocks merge on any failure
 - `make dev` brings up working local stack on a fresh clone in one command
 
 #### CEO checklist
-- [x] I can see the repo on GitHub with the documented monorepo structure (`packages/`, `apps/`, `infra/`, `migrations/`)
+- [x] I can see the repo on GitHub with the documented monorepo structure (`packages/`, `apps/`, `migrations/`)
 - [x] A README exists with a single-command dev setup and I can read it top-to-bottom without confusion
 - [x] I've watched the engineer run `make dev` on a fresh clone and the stack comes up without manual intervention
 - [ ] I can see a green CI run on `main` with lint, typecheck, unit, integration, and contract test jobs all present
-- [ ] `terraform apply` has been run against a dev GCP project and I can see the resources in the console (Cloud SQL instance, Cloud Run services, GCS buckets)
-- [ ] Renovate has opened at least one dependency PR, proving it's connected
 - [x] An ADR directory exists in the repo with at least one entry — this is where future decisions will be recorded
 
 ---
@@ -382,7 +370,7 @@ Hardware guidance for engineers:
 - BFS fallback with depth limit if sitemap coverage is poor.
 - Respect `robots.txt`, rate-limit per domain (start at 2 req/s, configurable per `universities.config`).
 - Exponential backoff on 429/5xx.
-- Persist raw HTML to GCS (`gs://{bucket}/raw/{university_id}/{content_hash}.html`) before processing. This decouples crawl from extraction — we can reprocess without re-crawling.
+- Persist raw HTML to local storage (`data/raw/{university_id}/{content_hash}.html`) before processing. This decouples crawl from extraction — we can reprocess without re-crawling.
 - Change detection: store `ETag`/`Last-Modified`/content hash on `documents`. Skip re-extraction if hash unchanged.
 - Upsert by `(university_id, url)` unique constraint.
 
@@ -509,7 +497,7 @@ Why hybrid is non-negotiable here: pure vector search fails on proper nouns (sup
 - Metrics: Recall@10, MRR@10, nDCG@10 for retrieval. Measured against the golden set's correct URLs.
 - Baseline progression: vector-only → +BM25 → +fusion → +rerank. Record each delta.
 - CI: runs on every merge to main. PR runs a 20-question subset for speed. Block merge on regression >2% on any metric.
-- Dashboard: simple Streamlit app served from Cloud Run, reads metrics table. Shows trends per commit.
+- Dashboard: simple Streamlit app, reads metrics table. Shows trends per commit.
 
 ### Exit criteria
 - Recall@10 ≥ 85% on the golden set
@@ -663,7 +651,7 @@ Two distinct paths:
 - **End-user sessions:** HttpOnly cookies (see cross-cutting commitments above). First request without cookie creates session and sets one. CSRF via double-submit token.
 - **Tenant server-to-server:** API keys per university, `Authorization: Bearer <key>`. Keys issued manually during onboarding, stored hashed in DB.
 
-Rate limiting: Redis-backed (Cloud Memorystore), per-API-key and per-session tiers.
+Rate limiting: Redis-backed (docker-compose service), per-API-key and per-session tiers.
 
 ### 5.4 Tenant configuration
 
@@ -781,8 +769,7 @@ Both frontends consume the same API and share OpenAPI-generated types. They run 
 
 **Deployment:**
 - `flutter build web --release --wasm` (WASM where supported, JS fallback)
-- Served from Cloud Run + Caddy (same pattern as Rentogether)
-- Cloud CDN in front for global cache
+- Served via Caddy reverse proxy (docker-compose service)
 - `widget.js` loader: short TTL, separate deploy
 - Flutter bundle: long TTL + content-hashed filenames
 
@@ -824,7 +811,7 @@ Both frontends consume the same API and share OpenAPI-generated types. They run 
 
 ### 7.1 Scheduled recrawl
 
-- Cloud Scheduler → Cloud Run Job
+- Host cron → `docker compose run` job
 - Weekly full recrawl by default
 - Daily recrawl of high-change page types (news, deadlines, admissions)
 - Per-tenant schedule override in `universities.config`
@@ -952,20 +939,15 @@ Weeks 1-3 are the infrastructure and ingestion slog. Weeks 4-7 are the interesti
 | PDFs (program brochures) are layout-heavy and extract poorly | High | Buffer time in Phase 1.3; `unstructured` hi_res + manual spot-check; accept some PDFs won't parse well and log them |
 | Supervisor data is stale or inconsistent across pages | High | Treat supervisor entities as a first-class curated index; admin UI for universities to correct entries in v2 |
 | Eval set is too small or not representative | Medium | Grow continuously from real user queries via feedback loop; target 500 questions per tenant by end of Phase 7 |
-| Postgres 18 / pgvector 0.8 not available on Cloud SQL | Medium | Fallback: PG17 with upgrade path documented, OR self-host PG on Cloud Run VM, OR use AlloyDB |
-| Cloud Run sidecar pattern doesn't fit embedder resource needs | Medium | `RemoteEmbedder` interface means we split embedder into its own service with zero code changes |
-| Flutter web bundle too heavy for widget UX | Low-Medium | Iframe isolation limits the pain to the widget itself; WASM build + CDN + aggressive caching; fall back to lighter web tech if needed (deferred to v2 if it becomes real) |
+| Flutter web bundle too heavy for widget UX | Low-Medium | Iframe isolation limits the pain to the widget itself; WASM build + aggressive caching; fall back to lighter web tech if needed (deferred to v2 if it becomes real) |
 
 ---
 
 ## Open items for the senior engineer
 
 1. **Embedding model bake-off:** you own it. Pick date within Phase 1, Day 1. Document methodology, results, decision in an ADR.
-2. **Widget domain/cookie strategy:** confirm we can register `*.ourproduct.com` and set up `api.` + `widget.` subdomains for shared cookie scope. If not, we need a cross-origin token exchange instead of cookies — meaningful protocol change.
-3. **Cloud Run sidecar pattern for embedder:** verify Cloud Run's multi-container support handles our sizing. If not, embedder becomes a separate Cloud Run service from day one (same `Embedder` interface, `RemoteEmbedder` impl).
-4. **Postgres 18 availability on Cloud SQL:** confirm GA in our region. If preview/beta only: wait, use preview, or drop to PG17 with documented upgrade path.
-5. **pgvector 0.8 availability on Cloud SQL:** we need it for iterative scan with metadata filters. If behind, we either self-host PG on Cloud Run VM or use AlloyDB.
-6. **Staging environment strategy:** per-tenant or shared-with-isolation? I lean shared-staging, dedicated-prod. Your call with justification.
+2. **Widget domain/cookie strategy:** confirm we can set up subdomains for shared cookie scope. If not, we need a cross-origin token exchange instead of cookies — meaningful protocol change.
+3. **Production hosting strategy:** when ready to move beyond local Docker, evaluate VPS providers (Hetzner, DigitalOcean, etc.) with enough RAM for the embedding model. Docker-compose deploys directly.
 
 ---
 

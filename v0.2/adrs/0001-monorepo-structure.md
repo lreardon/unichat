@@ -17,7 +17,6 @@ Single monorepo with the following top-level layout:
 ├── packages/           # Python packages (core, api, ingestion, retrieval, tui, eval)
 ├── apps/
 │   └── flutter_widget/ # Flutter web-embed widget
-├── infra/              # Terraform
 ├── migrations/         # Alembic
 ├── adrs/               # Architecture Decision Records
 ├── scripts/            # Dev/ops scripts
@@ -27,17 +26,17 @@ Single monorepo with the following top-level layout:
 **Key conventions:**
 - `packages/` contains importable Python code, organized by domain. TUI lives here as `packages/tui/` since it's a Python package sharing `packages/core` types.
 - `apps/flutter_widget/` has its own `pubspec.yaml` and Dart build system, independent of Python tooling.
-- `infra/` contains Terraform, separated from application code.
+- All services run via `docker-compose.yml` — no separate IaC tooling needed for v1.
 - One class or top-level function per file throughout.
 - All Python deps managed by a single `pyproject.toml` at the root with `uv`.
 
 ## Alternatives Considered
 
 1. **Separate repos per component** — rejected because shared abstractions (`Embedder`, `VectorStore`) would require publishing internal packages. Overhead not justified at this team size.
-2. **Flat src/ layout** — rejected because mixing Terraform, Flutter, and Python in one namespace is confusing. The `packages/apps/infra` split makes ownership clear.
+2. **Flat src/ layout** — rejected because mixing Flutter and Python in one namespace is confusing. The `packages/apps` split makes ownership clear.
 
 ## Consequences
 
 - CI must understand the monorepo and run relevant checks per changed path.
 - Flutter widget in `apps/flutter_widget/` has its own `pubspec.yaml` and build step, independent of Python tooling.
-- Terraform in `infra/` can be applied independently of application deploys.
+- All infrastructure is Docker-based — `docker-compose.yml` is the single source of truth for service topology.

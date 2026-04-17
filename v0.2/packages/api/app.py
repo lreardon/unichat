@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -11,7 +12,7 @@ from packages.api.routes import chat, health, ingest
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     engine = await get_engine()
     yield
     await engine.dispose()
@@ -41,13 +42,9 @@ def _register_error_handlers(app: FastAPI) -> None:
         return JSONResponse(status_code=401, content={"detail": "Session expired or invalid"})
 
     @app.exception_handler(CSRFValidationError)
-    async def handle_csrf_error(
-        request: Request, exc: CSRFValidationError
-    ) -> JSONResponse:
+    async def handle_csrf_error(request: Request, exc: CSRFValidationError) -> JSONResponse:
         return JSONResponse(status_code=403, content={"detail": exc.reason})
 
     @app.exception_handler(InvalidAPIKeyError)
-    async def handle_invalid_api_key(
-        request: Request, exc: InvalidAPIKeyError
-    ) -> JSONResponse:
+    async def handle_invalid_api_key(request: Request, exc: InvalidAPIKeyError) -> JSONResponse:
         return JSONResponse(status_code=401, content={"detail": "Invalid or missing API key"})

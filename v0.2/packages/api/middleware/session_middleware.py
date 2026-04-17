@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import Request, Response
 from sqlalchemy import select, update
@@ -50,7 +50,7 @@ async def _load_existing_session(
     settings: Settings,
 ) -> SessionData:
     token_hash_value = hash_token(cookie_value)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     result = await db.execute(
         select(Session).where(
@@ -85,7 +85,7 @@ async def _create_new_session(
     settings: Settings,
     university_id: uuid.UUID,
 ) -> SessionData:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expires = now + timedelta(days=settings.session_ttl_days)
 
     # Create conversation — expires_at is GENERATED ALWAYS from created_at,

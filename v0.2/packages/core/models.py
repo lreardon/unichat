@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     DateTime,
@@ -8,6 +9,8 @@ from sqlalchemy import (
     Integer,
     SmallInteger,
     Text,
+)
+from sqlalchemy import (
     text as sa_text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -26,7 +29,9 @@ class University(Base):
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     domain: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    config: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=sa_text("'{}'"))
+    config: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=sa_text("'{}'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=sa_text("now()")
     )
@@ -45,13 +50,9 @@ class Document(Base):
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
     content_hash: Mapped[str] = mapped_column(Text, nullable=False)
     page_type: Mapped[str] = mapped_column(Text, nullable=False)
-    raw_html_gcs_path: Mapped[str | None] = mapped_column(Text, nullable=True)
-    last_crawled: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    last_modified: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    raw_html_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_crawled: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_modified: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(Text, nullable=False)  # active, stale, error
 
     __table_args__ = (
@@ -72,15 +73,11 @@ class Chunk(Base):
         ForeignKey("documents.id", ondelete="CASCADE"),
         nullable=False,
     )
-    university_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
+    university_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    heading_trail: Mapped[list[str] | None] = mapped_column(
-        ARRAY(Text), nullable=True
-    )
-    meta: Mapped[dict] = mapped_column(
+    heading_trail: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    meta: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=sa_text("'{}'")
     )
     last_verified: Mapped[datetime] = mapped_column(
@@ -89,9 +86,7 @@ class Chunk(Base):
     # embedding vector(N) and tsv tsvector columns added via raw SQL in migration
     # since SQLAlchemy doesn't natively support pgvector or GENERATED tsvector
 
-    __table_args__ = (
-        Index("ix_chunks_university_document", "university_id", "document_id"),
-    )
+    __table_args__ = (Index("ix_chunks_university_document", "university_id", "document_id"),)
 
 
 class Entity(Base):
@@ -100,14 +95,12 @@ class Entity(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=sa_text("uuidv7()")
     )
-    university_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
+    university_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     entity_type: Mapped[str] = mapped_column(
         Text, nullable=False
     )  # supervisor, program, scholarship, deadline
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    meta: Mapped[dict] = mapped_column(
+    meta: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=sa_text("'{}'")
     )
     source_document_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -115,9 +108,7 @@ class Entity(Base):
     )
     # embedding vector(N) added via raw SQL in migration
 
-    __table_args__ = (
-        Index("ix_entities_university_type", "university_id", "entity_type"),
-    )
+    __table_args__ = (Index("ix_entities_university_type", "university_id", "entity_type"),)
 
 
 class Conversation(Base):
@@ -159,7 +150,7 @@ class Message(Base):
     retrieved_chunk_ids: Mapped[list[uuid.UUID] | None] = mapped_column(
         ARRAY(UUID(as_uuid=True)), nullable=True
     )
-    meta: Mapped[dict] = mapped_column(
+    meta: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=sa_text("'{}'")
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -188,9 +179,7 @@ class Session(Base):
     last_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=sa_text("now()")
     )
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (
         Index("ix_sessions_expires_at", "expires_at"),

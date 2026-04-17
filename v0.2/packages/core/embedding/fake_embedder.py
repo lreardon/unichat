@@ -20,7 +20,7 @@ class FakeEmbedder:
         # Extend digest to fill dimension by repeating
         needed_bytes = self.dimension * 4
         extended = digest * (needed_bytes // len(digest) + 1)
-        floats = struct.unpack(f"<{self.dimension}f", extended[: needed_bytes])
+        floats = struct.unpack(f"<{self.dimension}f", extended[:needed_bytes])
         # Normalize to unit vector
         magnitude = sum(f * f for f in floats) ** 0.5
         if magnitude == 0:

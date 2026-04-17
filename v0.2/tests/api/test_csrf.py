@@ -1,7 +1,4 @@
 import pytest
-from starlette.testclient import TestClient as StarletteRequest
-from unittest.mock import MagicMock
-
 from fastapi import Request
 
 from packages.api.middleware.csrf_middleware import CSRFValidationError, validate_csrf

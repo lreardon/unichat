@@ -1,7 +1,7 @@
+from collections.abc import AsyncGenerator
 from functools import lru_cache
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from packages.core.config import Settings
 from packages.core.database import create_engine, create_session_factory
@@ -19,7 +19,7 @@ def get_settings() -> Settings:
 
 
 _engine: AsyncEngine | None = None
-_session_factory: sessionmaker[AsyncSession] | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
 _embedder: Embedder | None = None
 _vector_store: VectorStore | None = None
 
@@ -31,7 +31,7 @@ async def get_engine() -> AsyncEngine:
     return _engine
 
 
-async def get_session_factory() -> sessionmaker[AsyncSession]:
+async def get_session_factory() -> async_sessionmaker[AsyncSession]:
     global _session_factory
     if _session_factory is None:
         engine = await get_engine()
@@ -39,7 +39,7 @@ async def get_session_factory() -> sessionmaker[AsyncSession]:
     return _session_factory
 
 
-async def get_db_session() -> AsyncSession:
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
     factory = await get_session_factory()
     async with factory() as session:
         yield session

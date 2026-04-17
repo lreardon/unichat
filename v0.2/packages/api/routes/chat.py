@@ -1,16 +1,21 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from packages.api.dependencies import get_db_session, get_settings
+from packages.api.error_models import ErrorResponse
 from packages.api.middleware.csrf_middleware import validate_csrf
 from packages.api.middleware.session_middleware import SessionData, resolve_session
 from packages.core.config import Settings
 from packages.core.models import Message
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+AppSettings = Annotated[Settings, Depends(get_settings)]
 
 
 class ChatRequest(BaseModel):
@@ -24,13 +29,17 @@ class ChatResponse(BaseModel):
     reply: str
 
 
-@router.post("", response_model=ChatResponse)
+@router.post(
+    "",
+    response_model=ChatResponse,
+    responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+)
 async def send_message(
     body: ChatRequest,
     request: Request,
     response: Response,
-    db: AsyncSession = Depends(get_db_session),
-    settings: Settings = Depends(get_settings),
+    db: DbSession,
+    settings: AppSettings,
 ) -> ChatResponse:
     validate_csrf(request, settings)
 

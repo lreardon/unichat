@@ -16,7 +16,8 @@ class RemoteEmbedder:
             json={"inputs": texts, "truncate": True},
         )
         response.raise_for_status()
-        return response.json()
+        result: list[list[float]] = response.json()
+        return result
 
     async def embed_query(self, text: str) -> list[float]:
         results = await self.embed_documents([text])

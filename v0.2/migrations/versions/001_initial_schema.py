@@ -57,7 +57,7 @@ def upgrade() -> None:
         sa.Column("title", sa.Text(), nullable=True),
         sa.Column("content_hash", sa.Text(), nullable=False),
         sa.Column("page_type", sa.Text(), nullable=False),
-        sa.Column("raw_html_gcs_path", sa.Text(), nullable=True),
+        sa.Column("raw_html_path", sa.Text(), nullable=True),
         sa.Column("last_crawled", sa.DateTime(timezone=True), nullable=False),
         sa.Column("last_modified", sa.DateTime(timezone=True), nullable=True),
         sa.Column("status", sa.Text(), nullable=False),

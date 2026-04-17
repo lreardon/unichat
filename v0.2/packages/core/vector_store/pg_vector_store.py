@@ -1,7 +1,8 @@
 import uuid
+from typing import Any
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from packages.core.vector_store.vector_store import ChunkResult
 
@@ -9,7 +10,9 @@ from packages.core.vector_store.vector_store import ChunkResult
 class PgVectorStore:
     """VectorStore implementation backed by pgvector on PostgreSQL."""
 
-    def __init__(self, *, session_factory: object, dimension: int) -> None:
+    def __init__(
+        self, *, session_factory: async_sessionmaker[AsyncSession], dimension: int
+    ) -> None:
         self._session_factory = session_factory
         self._dimension = dimension
 
@@ -23,14 +26,18 @@ class PgVectorStore:
         embedding: list[float],
         position: int,
         heading_trail: list[str] | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         async with self._session_factory() as session:
-            session: AsyncSession
             await session.execute(
                 text("""
-                    INSERT INTO chunks (id, document_id, university_id, text, position, heading_trail, metadata, embedding)
-                    VALUES (:id, :document_id, :university_id, :text, :position, :heading_trail, :metadata::jsonb, :embedding::vector)
+                    INSERT INTO chunks
+                        (id, document_id, university_id, text,
+                         position, heading_trail, metadata, embedding)
+                    VALUES
+                        (:id, :document_id, :university_id, :text,
+                         :position, :heading_trail,
+                         :metadata::jsonb, :embedding::vector)
                     ON CONFLICT (id) DO UPDATE SET
                         text = EXCLUDED.text,
                         embedding = EXCLUDED.embedding,
@@ -59,8 +66,7 @@ class PgVectorStore:
         top_k: int = 10,
     ) -> list[ChunkResult]:
         async with self._session_factory() as session:
-            session: AsyncSession
-            rows = await session.execute(
+            result = await session.execute(
                 text("""
                     SELECT id, document_id, text, heading_trail, metadata,
                            1 - (embedding <=> :query_embedding::vector) AS score
@@ -84,15 +90,14 @@ class PgVectorStore:
                     heading_trail=row.heading_trail,
                     metadata=row.metadata,
                 )
-                for row in rows
+                for row in result
             ]
 
     async def delete_by_document(self, *, document_id: uuid.UUID) -> int:
         async with self._session_factory() as session:
-            session: AsyncSession
             result = await session.execute(
                 text("DELETE FROM chunks WHERE document_id = :doc_id"),
                 {"doc_id": document_id},
             )
             await session.commit()
-            return result.rowcount
+            return int(result.rowcount)  # type: ignore[attr-defined]
