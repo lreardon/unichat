@@ -1,3 +1,3 @@
-from packages.core.vector_store.vector_store import VectorStore
+from packages.core.vector_store.vector_store import ChunkResult, VectorStore
 
-__all__ = ["VectorStore"]
+__all__ = ["ChunkResult", "VectorStore"]

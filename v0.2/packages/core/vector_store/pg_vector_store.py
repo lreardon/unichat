@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import delete, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from packages.core.vector_store.vector_store import ChunkResult
@@ -21,27 +21,31 @@ class PgVectorStore:
         university_id: uuid.UUID,
         content: str,
         embedding: list[float],
-        chunk_index: int,
-        metadata_json: str | None = None,
+        position: int,
+        heading_trail: list[str] | None = None,
+        metadata: dict | None = None,
     ) -> None:
         async with self._session_factory() as session:
             session: AsyncSession
             await session.execute(
                 text("""
-                    INSERT INTO chunks (id, document_id, university_id, content, chunk_index, metadata_json, embedding)
-                    VALUES (:id, :document_id, :university_id, :content, :chunk_index, :metadata_json, :embedding)
+                    INSERT INTO chunks (id, document_id, university_id, text, position, heading_trail, metadata, embedding)
+                    VALUES (:id, :document_id, :university_id, :text, :position, :heading_trail, :metadata::jsonb, :embedding::vector)
                     ON CONFLICT (id) DO UPDATE SET
-                        content = EXCLUDED.content,
+                        text = EXCLUDED.text,
                         embedding = EXCLUDED.embedding,
-                        metadata_json = EXCLUDED.metadata_json
+                        heading_trail = EXCLUDED.heading_trail,
+                        metadata = EXCLUDED.metadata,
+                        last_verified = now()
                 """),
                 {
                     "id": chunk_id,
                     "document_id": document_id,
                     "university_id": university_id,
-                    "content": content,
-                    "chunk_index": chunk_index,
-                    "metadata_json": metadata_json,
+                    "text": content,
+                    "position": position,
+                    "heading_trail": heading_trail,
+                    "metadata": "{}" if metadata is None else str(metadata),
                     "embedding": str(embedding),
                 },
             )
@@ -58,7 +62,7 @@ class PgVectorStore:
             session: AsyncSession
             rows = await session.execute(
                 text("""
-                    SELECT id, document_id, content, metadata_json,
+                    SELECT id, document_id, text, heading_trail, metadata,
                            1 - (embedding <=> :query_embedding::vector) AS score
                     FROM chunks
                     WHERE university_id = :university_id
@@ -75,9 +79,10 @@ class PgVectorStore:
                 ChunkResult(
                     chunk_id=row.id,
                     document_id=row.document_id,
-                    content=row.content,
+                    content=row.text,
                     score=row.score,
-                    metadata_json=row.metadata_json,
+                    heading_trail=row.heading_trail,
+                    metadata=row.metadata,
                 )
                 for row in rows
             ]
@@ -86,7 +91,7 @@ class PgVectorStore:
         async with self._session_factory() as session:
             session: AsyncSession
             result = await session.execute(
-                delete(text("chunks")).where(text("document_id = :doc_id")),
+                text("DELETE FROM chunks WHERE document_id = :doc_id"),
                 {"doc_id": document_id},
             )
             await session.commit()

@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     # Embedding
     embedder_type: str = "local"  # local | remote | fake
     embedder_url: str = "http://localhost:8080"
-    embedding_model_id: str = "Qwen/Qwen3-Embedding-0.6B"
-    embedding_dimension: int = 1024
+    embedding_model_id: str = "harrier-oss-v1"
+    embedding_dimension: int = 5376
 
     # Session
     session_cookie_name: str = "kb_session"

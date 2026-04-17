@@ -19,7 +19,7 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
     command:
       - "--model-id"
-      - "Qwen/Qwen3-Embedding-0.6B"
+      - "harrier-oss-v1"
       - "--port"
       - "8080"
     ports:

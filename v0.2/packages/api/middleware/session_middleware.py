@@ -88,8 +88,9 @@ async def _create_new_session(
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=settings.session_ttl_days)
 
-    # Create conversation
-    conversation = Conversation(university_id=university_id, expires_at=expires)
+    # Create conversation — expires_at is GENERATED ALWAYS from created_at,
+    # so we only set university_id
+    conversation = Conversation(university_id=university_id)
     db.add(conversation)
     await db.flush()
 
@@ -104,7 +105,7 @@ async def _create_new_session(
     db.add(session_row)
     await db.commit()
 
-    # Set cookie
+    # Set session cookie
     response.set_cookie(
         key=settings.session_cookie_name,
         value=raw_token,

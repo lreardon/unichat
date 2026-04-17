@@ -5,19 +5,21 @@ Multi-tenant university knowledge-base chatbot. Prospective students ask questio
 ## Architecture
 
 ```
-packages/          Python library code
-  core/            Config, DB, Embedder + VectorStore abstractions
+packages/
+  core/            Config, DB, Embedder + VectorStore abstractions, domain models
   api/             FastAPI service (routes, auth, session middleware)
   ingestion/       Crawl → extract → chunk → embed pipeline
   retrieval/       Hybrid search (vector + full-text), reranking
   generation/      LLM generation with citations + guardrails
-apps/
   tui/             Textual-based terminal UI (internal tool)
-  widget/          Flutter web-embed widget (iframe + postMessage)
+  eval/            Golden set, metrics, eval runner
+apps/
+  flutter_widget/  Flutter web-embed widget (iframe + postMessage)
 infra/             Terraform for GCP (Cloud SQL, Cloud Run, CDN)
 migrations/        Alembic (Postgres 18 + pgvector)
+adrs/              Architecture decision records
+scripts/           Dev/ops scripts
 tests/             Unit, integration, contract, eval
-docs/adr/          Architecture decision records
 ```
 
 ## Prerequisites
@@ -25,7 +27,7 @@ docs/adr/          Architecture decision records
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - Docker + Docker Compose
-- 16GB+ RAM (for local embedding model)
+- 64GB+ RAM (for harrier-oss-v1 27B embedding model)
 
 ## Quick Start
 
@@ -49,15 +51,17 @@ That's it. The API is at `http://localhost:8000`. Health check: `GET /health`.
 
 | Command | What it does |
 |---|---|
-| `make dev` | Start infrastructure + run API with hot reload |
+| `make dev` | Start infrastructure + migrate + run API with hot reload |
 | `make services` | Start Postgres + embedder only (no API) |
 | `make api` | Run API server with hot reload |
 | `make migrate` | Run Alembic migrations |
-| `make test` | Run full test suite |
+| `make test` | Run unit tests (no infrastructure needed) |
+| `make test-all` | Run all tests including integration |
 | `make lint` | Ruff check + format check |
 | `make typecheck` | Mypy strict mode |
 | `make eval` | Run retrieval eval harness |
 | `make ingest` | Run ingestion on fixture university |
+| `make down` | Stop all services |
 
 ## API Endpoints
 
@@ -85,12 +89,11 @@ uv run pytest tests/ -v
 
 ## Project Decisions
 
-Architecture Decision Records live in [docs/adr/](docs/adr/). Key decisions:
+Architecture Decision Records live in [adrs/](adrs/). Key decisions:
 
-- [ADR-0001](docs/adr/0001-monorepo-structure.md) — Monorepo structure
+- [ADR-0001](adrs/0001-monorepo-structure.md) — Monorepo structure
 
 ## Hardware Notes (Dev)
 
-- Apple Silicon M2+ or equivalent with 16GB+ RAM runs `Qwen3-Embedding-0.6B` on CPU
-- The 4B-parameter variant needs GPU or 32GB+ RAM
+- Apple Silicon M4 Max or equivalent with 64GB+ RAM runs `harrier-oss-v1` (27B) locally
 - If your machine can't run the embedder locally, set `UNICHAT_EMBEDDER_TYPE=remote` and point `UNICHAT_EMBEDDER_URL` at a shared dev instance
