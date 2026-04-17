@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: v0.2
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run ruff check packages/ tests/
+      - run: uv run ruff format --check packages/ tests/
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run mypy packages/core packages/api
+
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run pytest tests/ -v -m "not integration" --tb=short
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: unichat
+          POSTGRES_PASSWORD: unichat
+          POSTGRES_DB: unichat
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U unichat"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --mount type=tmpfs,destination=/var/lib/postgresql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run alembic upgrade head
+      - run: uv run pytest tests/ -v -m "integration" --tb=short
+
+  test-contract:
+    name: Contract Tests (Schemathesis)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: unichat
+          POSTGRES_PASSWORD: unichat
+          POSTGRES_DB: unichat
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U unichat"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --mount type=tmpfs,destination=/var/lib/postgresql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - run: uv sync --all-extras
+      - run: uv run alembic upgrade head
+      - name: Start API server
+        run: uv run uvicorn packages.api.server:app --host 0.0.0.0 --port 8000 &
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && break || sleep 1
+          done
+      - run: uv run st run http://localhost:8000/openapi.json --checks all --base-url http://localhost:8000

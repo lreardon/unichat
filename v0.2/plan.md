@@ -350,13 +350,13 @@ Hardware guidance for engineers:
 - `make dev` brings up working local stack on a fresh clone in one command
 
 #### CEO checklist
-- [ ] I can see the repo on GitHub with the documented monorepo structure (`packages/`, `apps/`, `infra/`, `migrations/`)
-- [ ] A README exists with a single-command dev setup and I can read it top-to-bottom without confusion
-- [ ] I've watched the engineer run `make dev` on a fresh clone and the stack comes up without manual intervention
+- [x] I can see the repo on GitHub with the documented monorepo structure (`packages/`, `apps/`, `infra/`, `migrations/`)
+- [x] A README exists with a single-command dev setup and I can read it top-to-bottom without confusion
+- [x] I've watched the engineer run `make dev` on a fresh clone and the stack comes up without manual intervention
 - [ ] I can see a green CI run on `main` with lint, typecheck, unit, integration, and contract test jobs all present
 - [ ] `terraform apply` has been run against a dev GCP project and I can see the resources in the console (Cloud SQL instance, Cloud Run services, GCS buckets)
 - [ ] Renovate has opened at least one dependency PR, proving it's connected
-- [ ] An ADR directory exists in the repo with at least one entry — this is where future decisions will be recorded
+- [x] An ADR directory exists in the repo with at least one entry — this is where future decisions will be recorded
 
 ---
 

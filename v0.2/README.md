@@ -27,7 +27,7 @@ tests/             Unit, integration, contract, eval
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - Docker + Docker Compose
-- 64GB+ RAM (for harrier-oss-v1 27B embedding model)
+- 16GB+ RAM (for Qwen3-Embedding-0.6B model)
 
 ## Quick Start
 
@@ -95,5 +95,5 @@ Architecture Decision Records live in [adrs/](adrs/). Key decisions:
 
 ## Hardware Notes (Dev)
 
-- Apple Silicon M4 Max or equivalent with 64GB+ RAM runs `harrier-oss-v1` (27B) locally
+- Apple Silicon M2+ or equivalent with 16GB+ RAM runs `Qwen3-Embedding-0.6B` on CPU
 - If your machine can't run the embedder locally, set `UNICHAT_EMBEDDER_TYPE=remote` and point `UNICHAT_EMBEDDER_URL` at a shared dev instance

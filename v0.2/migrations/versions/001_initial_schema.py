@@ -15,9 +15,9 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-# Embedding dimension — harrier-oss-v1 (27B, 5376-dim).
+# Embedding dimension — Qwen3-Embedding-0.6B (1024-dim).
 # Locked after model selection. Changing requires full re-embed.
-EMBEDDING_DIM = 5376
+EMBEDDING_DIM = 1024
 
 
 def upgrade() -> None:
@@ -108,13 +108,24 @@ def upgrade() -> None:
     # embedding vector column
     op.execute(f"ALTER TABLE chunks ADD COLUMN embedding vector({EMBEDDING_DIM})")
 
-    # tsvector generated column — weighted heading trail (A) + body text (B)
+    # tsvector column maintained by trigger (GENERATED not possible — to_tsvector is not immutable)
+    op.execute("ALTER TABLE chunks ADD COLUMN tsv tsvector")
+
     op.execute("""
-        ALTER TABLE chunks ADD COLUMN tsv tsvector
-        GENERATED ALWAYS AS (
-            setweight(to_tsvector('english', coalesce(array_to_string(heading_trail, ' '), '')), 'A') ||
-            setweight(to_tsvector('english', text), 'B')
-        ) STORED
+        CREATE FUNCTION chunks_tsv_trigger() RETURNS trigger AS $$
+        BEGIN
+            NEW.tsv :=
+                setweight(to_tsvector('english', coalesce(array_to_string(NEW.heading_trail, ' '), '')), 'A') ||
+                setweight(to_tsvector('english', NEW.text), 'B');
+            RETURN NEW;
+        END
+        $$ LANGUAGE plpgsql;
+    """)
+
+    op.execute("""
+        CREATE TRIGGER trg_chunks_tsv
+        BEFORE INSERT OR UPDATE OF text, heading_trail ON chunks
+        FOR EACH ROW EXECUTE FUNCTION chunks_tsv_trigger();
     """)
 
     # chunk indexes
@@ -167,14 +178,26 @@ def upgrade() -> None:
     )
 
     # --- conversations ---
-    op.execute("""
-        CREATE TABLE conversations (
-            id UUID PRIMARY KEY DEFAULT uuidv7(),
-            university_id UUID NOT NULL REFERENCES universities(id),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            expires_at TIMESTAMPTZ NOT NULL GENERATED ALWAYS AS (created_at + INTERVAL '14 days') STORED
-        )
-    """)
+    # expires_at uses DEFAULT rather than GENERATED ALWAYS — timestamptz + interval is not immutable
+    op.create_table(
+        "conversations",
+        sa.Column("id", sa.UUID(), server_default=sa.text("uuidv7()"), primary_key=True),
+        sa.Column(
+            "university_id", sa.UUID(), sa.ForeignKey("universities.id"), nullable=False
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
+        ),
+        sa.Column(
+            "expires_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now() + interval '14 days'"),
+        ),
+    )
     op.create_index("ix_conversations_expires_at", "conversations", ["expires_at"])
 
     # --- messages ---
@@ -288,8 +311,10 @@ def downgrade() -> None:
     op.drop_table("api_keys")
     op.drop_table("sessions")
     op.drop_table("messages")
-    op.execute("DROP TABLE conversations")
+    op.drop_table("conversations")
     op.drop_table("entities")
+    op.execute("DROP TRIGGER IF EXISTS trg_chunks_tsv ON chunks")
+    op.execute("DROP FUNCTION IF EXISTS chunks_tsv_trigger()")
     op.drop_table("chunks")
     op.drop_table("documents")
     op.drop_table("universities")

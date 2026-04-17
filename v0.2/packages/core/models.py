@@ -132,9 +132,12 @@ class Conversation(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=sa_text("now()")
     )
-    # expires_at is GENERATED ALWAYS in SQL; read-only in ORM
+    # expires_at defaults to created_at + 14 days via server_default
+    # (GENERATED ALWAYS not possible — timestamptz + interval is not immutable in PG)
     expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=sa_text("now() + interval '14 days'"),
     )
 
     __table_args__ = (Index("ix_conversations_expires_at", "expires_at"),)

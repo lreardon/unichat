@@ -3,5 +3,6 @@
   "python-envs.pythonProjects": [],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/.direnv/python-3.14/lib/python3.14/site-packages"
-  ]
+  ],
+  "markdown-checkbox-preview.autoPreview": true
 }
