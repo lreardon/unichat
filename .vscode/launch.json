@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Full Stack (Backend + Flutter Chrome)",
+      "configurations": ["Backend (serve)", "Flutter Frontend (Chrome)"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Backend (serve)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Flutter Frontend (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": ["--dart-define", "API_BASE=http://127.0.0.1:8000"]
+    },
+    {
+      "name": "Flutter Frontend (Web Server)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "deviceId": "web-server",
+      "toolArgs": [
+        "--web-port",
+        "8080",
+        "--dart-define",
+        "API_BASE=http://127.0.0.1:8000"
+      ]
+    }
+  ]
+}

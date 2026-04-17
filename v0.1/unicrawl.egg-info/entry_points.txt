@@ -1,0 +1,3 @@
+[console_scripts]
+serve = unicrawl.cli:serve
+unicrawl = unicrawl.cli:main
