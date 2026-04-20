@@ -445,7 +445,7 @@ Tests: integration test against a running TEI container, asserting determinism a
 - Integration test runs the full pipeline on a 10-page fixture site in <30s
 
 #### CEO checklist
-- [ ] I've seen the embedding bake-off ADR: candidates tested, methodology, Recall@10 numbers per model, and the chosen winner with justification
+- [x] I've seen the embedding bake-off ADR: candidates tested, methodology, Recall@10 numbers per model, and the chosen winner with justification
 - [ ] The pilot university is fully ingested — I can see row counts in `documents` and `chunks` matching the site's approximate page count
 - [ ] The engineer has shown me 10 random chunks pulled from the database; each is coherent English text with a visible heading trail and sensible metadata
 - [ ] Tables from a real program requirements page survived chunking intact (I can see the proof)

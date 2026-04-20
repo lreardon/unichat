@@ -20,7 +20,19 @@ services:
     platform: linux/amd64  # no arm64 build; runs via Rosetta on Apple Silicon
     command:
       - "--model-id"
-      - "Qwen/Qwen3-Embedding-0.6B"
+      - "onnx-community/Qwen3-Embedding-0.6B-ONNX"
+      - "--pooling"
+      - "last-token"
+      - "--max-concurrent-requests"
+      - "8"
+      - "--max-batch-tokens"
+      - "512"
+      - "--max-batch-requests"
+      - "1"
+      - "--max-client-batch-size"
+      - "4"
+      - "--tokenization-workers"
+      - "2"
       - "--port"
       - "8080"
     ports:
@@ -31,6 +43,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 120s  # model download + Rosetta startup can be slow
+    volumes:
+      - ./data/embedder-cache:/data
 
 volumes:
   postgres-data:

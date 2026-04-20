@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/newsroom/news-article-listing?categoryname=business+%26+law",
+  "url": "https://www.unsw.edu.au/newsroom/news-article-listing?categoryName=Business%20%26%20Law#search=&filters=f.Topic%257CnewsTopic:Business+%2526+Law&sort=dmetadatetime&startRank=1&numRanks=12",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

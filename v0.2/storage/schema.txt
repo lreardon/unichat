@@ -1,0 +1,9 @@
+Plaintext Schema Notes
+
+Universities table
+
+Departments table (university_id)
+
+Faculty table (university_id, department_ids)
+
+Webpages table (url, links_to?, linked_from?, university_id?, department_id?)

@@ -1,4 +1,5 @@
 import uuid
+import json
 from typing import Any
 
 from sqlalchemy import text
@@ -37,7 +38,7 @@ class PgVectorStore:
                     VALUES
                         (:id, :document_id, :university_id, :text,
                          :position, :heading_trail,
-                         :metadata::jsonb, :embedding::vector)
+                         CAST(:metadata AS jsonb), CAST(:embedding AS vector))
                     ON CONFLICT (id) DO UPDATE SET
                         text = EXCLUDED.text,
                         embedding = EXCLUDED.embedding,
@@ -52,7 +53,7 @@ class PgVectorStore:
                     "text": content,
                     "position": position,
                     "heading_trail": heading_trail,
-                    "metadata": "{}" if metadata is None else str(metadata),
+                    "metadata": json.dumps(metadata or {}),
                     "embedding": str(embedding),
                 },
             )
@@ -69,10 +70,10 @@ class PgVectorStore:
             result = await session.execute(
                 text("""
                     SELECT id, document_id, text, heading_trail, metadata,
-                           1 - (embedding <=> :query_embedding::vector) AS score
+                           1 - (embedding <=> CAST(:query_embedding AS vector)) AS score
                     FROM chunks
                     WHERE university_id = :university_id
-                    ORDER BY embedding <=> :query_embedding::vector
+                    ORDER BY embedding <=> CAST(:query_embedding AS vector)
                     LIMIT :top_k
                 """),
                 {

@@ -1,0 +1,16 @@
+{
+  "unique_key": "https://www.unsw.edu.au/medicine-health",
+  "url": "https://www.unsw.edu.au/medicine-health",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "state": 4
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": "2026-04-17 21:25:52.412966+00:00"
+}

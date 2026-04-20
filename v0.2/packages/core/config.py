@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Embedding
     embedder_type: str = "local"  # local | remote | fake
     embedder_url: str = "http://localhost:8080"
-    embedding_model_id: str = "Qwen/Qwen3-Embedding-0.6B"
+    embedding_model_id: str = "onnx-community/Qwen3-Embedding-0.6B-ONNX"
     embedding_dimension: int = 1024
 
     # Session

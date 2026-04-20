@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/engineering/student-life/undergraduate-research-opportunities",
+  "url": "https://www.unsw.edu.au/engineering/student-life/undergraduate-research-opportunities",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

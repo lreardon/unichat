@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/canberra/study-with-us/postgraduate-research/doctor-philosophy-phd",
+  "url": "https://www.unsw.edu.au/canberra/study-with-us/postgraduate-research/doctor-philosophy-phd",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

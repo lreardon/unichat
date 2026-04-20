@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/content/dam/pdfs/research/higher-degree-research/cotutelle-joint-phd-candidate-form.docx",
+  "url": "https://www.unsw.edu.au/content/dam/pdfs/research/higher-degree-research/cotutelle-joint-phd-candidate-form.docx",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 2
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

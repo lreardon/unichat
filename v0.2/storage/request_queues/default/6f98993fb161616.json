@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/governance/policy/browse-a-z",
+  "url": "https://www.unsw.edu.au/governance/policy/browse-a-z#search=admission&sort=relevance&startRank=1&numRanks=0&componentId=66326238-d80e-486d-be52-e7b09bf577f5",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 2
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

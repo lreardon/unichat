@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.events.unsw.edu.au/event/unsw-arts-design-architecture-information-evening-1",
+  "url": "https://www.events.unsw.edu.au/event/unsw-arts-design-architecture-information-evening-1",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

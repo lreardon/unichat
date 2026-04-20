@@ -18,6 +18,7 @@ dependencies = [
     # Utilities
     "pydantic>=2.11,<3",
     "pydantic-settings>=2.2,<3",
+    "crawlee[beautifulsoup]>=1.6,<2",
 ]
 
 [project.optional-dependencies]
@@ -31,8 +32,10 @@ dev = [
     "mypy>=1.15,<2",
 ]
 ingestion = [
-    "crawlee[beautifulsoup]>=0.5,<1",
+    "crawlee[beautifulsoup]>=1.6,<2",
     "trafilatura>=2,<3",
+    "anthropic>=0.52,<1",
+    "huggingface_hub>=0.14,<1",
 ]
 
 [build-system]
@@ -45,9 +48,7 @@ packages = ["packages"]
 [tool.ruff]
 target-version = "py313"
 line-length = 99
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH"]
+lint.select = ["E", "F", "I", "N", "UP", "B", "SIM", "TC"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -49,7 +49,7 @@ class Document(Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
     content_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    page_type: Mapped[str] = mapped_column(Text, nullable=False)
+    page_type: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_html_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_crawled: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     last_modified: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -186,6 +186,17 @@ class Session(Base):
         Index("ix_sessions_token_hash", "token_hash"),
         Index("ix_sessions_university_last_seen", "university_id", "last_seen_at"),
     )
+
+
+class EmbeddingsCacheEntry(Base):
+    __tablename__ = "embeddings_cache"
+
+    content_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    model_id: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=sa_text("now()")
+    )
+    # embedding vector(1024) column added via raw SQL in migration
 
 
 class Feedback(Base):

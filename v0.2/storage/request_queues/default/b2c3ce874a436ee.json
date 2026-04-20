@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/newsroom/news/2025/12/why-flexible-work-alone-isnt-enough-preferences-matter-more",
+  "url": "https://www.unsw.edu.au/newsroom/news/2025/12/why-flexible-work-alone-isnt-enough-preferences-matter-more",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

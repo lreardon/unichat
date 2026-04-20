@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/study/find-a-degree-or-course/degree-search-results",
+  "url": "https://www.unsw.edu.au/study/find-a-degree-or-course/degree-search-results#search=&filters=f.Degree+Type%257CdegreeType:Undergraduate+f.Faculty%257CdegreeFaculty:UNSW+Business+School+f.Domestic%252FInternational%257CdegreeEligibility:Domestic&sort=relevance&startRank=1&numRanks=10",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

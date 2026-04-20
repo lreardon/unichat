@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/medicine-health/about-us/health-precincts/unsw-health-translation-hub-future-of-health-exhibition",
+  "url": "https://www.unsw.edu.au/medicine-health/about-us/health-precincts/UNSW-Health-Translation-Hub-Future-of-Health-exhibition",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

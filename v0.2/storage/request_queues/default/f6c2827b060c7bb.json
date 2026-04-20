@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/engineering/study-with-us/undergraduate",
+  "url": "https://www.unsw.edu.au/engineering/study-with-us/undergraduate",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/science/engage-with-us/women-stem-ambassador-program/analysis-of-awarded-australian-grants-by-gender",
+  "url": "https://www.unsw.edu.au/science/engage-with-us/women-stem-ambassador-program/analysis-of-awarded-australian-grants-by-gender",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/content/dam/pdfs/research/higher-degree-research/unsw%20hdr%20graduate%20attributes%20and%20learning%20outcomes.pdf",
+  "url": "https://www.unsw.edu.au/content/dam/pdfs/research/higher-degree-research/UNSW%20HDR%20Graduate%20Attributes%20and%20Learning%20Outcomes.pdf",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 2
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

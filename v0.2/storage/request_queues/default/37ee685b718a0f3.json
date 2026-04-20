@@ -1,0 +1,17 @@
+{
+  "unique_key": "https://www.unsw.edu.au/science/engage-with-us/unsw-stemm-champions-program/unsw_stemm_champions_directory0",
+  "url": "https://www.unsw.edu.au/science/engage-with-us/unsw-stemm-champions-program/UNSW_STEMM_Champions_Directory0",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "enqueueStrategy": "same-domain",
+      "crawlDepth": 1
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": null
+}

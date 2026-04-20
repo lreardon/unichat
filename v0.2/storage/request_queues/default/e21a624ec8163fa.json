@@ -1,0 +1,16 @@
+{
+  "unique_key": "https://www.unsw.edu.au/arts-design-architecture",
+  "url": "https://www.unsw.edu.au/arts-design-architecture",
+  "method": "GET",
+  "payload": null,
+  "headers": {},
+  "user_data": {
+    "__crawlee": {
+      "state": 4
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": null,
+  "handled_at": "2026-04-17 21:25:52.414751+00:00"
+}
